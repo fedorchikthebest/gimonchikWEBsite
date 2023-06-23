@@ -39,6 +39,7 @@ def login():
         if check_key(request.form.get('key')):
             update_ip(request.remote_addr)
             loggined_ip = request.remote_addr
+            print(request.form.get('key'), open('key.txt').read())
             return redirect('/')
     return render_template('login.html', title="login", autorised=loggined_ip == request.remote_addr)
 

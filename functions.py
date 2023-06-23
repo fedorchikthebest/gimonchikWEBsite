@@ -7,12 +7,12 @@ def update_ip(ip):
 
 def load_ip():
     with open('loggined_ip.txt') as f:
-        return f.read()
+        return f.read().rstrip()
 
 
 def check_key(key):
     with open('key.txt') as f:
-        return f.read() == key
+        return f.read().rstrip() == key
 
 
 def gen_filename(request, name):
