@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+</head>
+<body>
+    <div class="container">
+    <header class="d-flex justify-content-center py-3">
+      <ul class="nav nav-pills">
+        <li class="nav-item"><a href="/" class="nav-link">Главная</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link">О сайте</a></li>
+          {% if loggined == False %}
+        <li class="nav-item"><a href="/login" class="nav-link">Авторизация</a></li>
+          {% endif %}
+      {% if loggined == True %}
+        <li class="nav-item"><a href="/add_post" class="nav-link">Написать пост</a></li>
+          <li class="nav-item"><form action = "/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" multiple />
+        <input type = "submit" value="Upload">
+    </form></li>
+          {% endif %}
+      </ul>
+    </header>
+  </div>
+    <main role="main" class="container">
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Загрузить новый файл</h1>
+    <form method=post enctype=multipart/form-data>
+    <label>Заголовок</label>
+        <input type=text name=title>
+    <label>аватар</label>
+      <input type=file name=avatar>
+        <label>html поста</label>
+        <input type=file name=html>
+      <input type=submit value=Загрузить>
+    </form>
+{% endblock %}
