@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, abort, flash
 from data import db_session
 from functions import *
 from data.posts import Post
+from data.data_api import SaveData
 import uuid
 import os
 
@@ -91,6 +92,34 @@ def delete_post(id):
         db_sess.delete(post)
         db_sess.commit()
     return redirect('/')
+
+
+@app.route('/api/data_saving/<string:id>', methods=['POST', 'GET'])
+def api_data(id):
+    db_sess = db_session.create_session()
+    if request.method == 'POST':
+        req = request.get_json()
+        print(req)
+        if not check_key(req.get('key')) and loggined_ip != request.remote_addr:
+            return abort(404)
+        if req.get('type') == 'write_data':
+            if db_sess.query(SaveData).filter(SaveData.id == id).first() is None:
+                api_data = SaveData(
+                    id=id,
+                    data=req.get('data')
+                )
+                db_sess.add(api_data)
+            else:
+                api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
+                api_data.data = req.get('data')
+            db_sess.commit()
+        if req.get('type') == 'delete_data':
+            api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
+            db_sess.delete(api_data)
+            db_sess.commit()
+        return "OK"
+    api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
+    return api_data.data if api_data is not None else abort(404)
 
 
 @app.route('/edit_post/<string:id>', methods=['GET', 'POST'])
