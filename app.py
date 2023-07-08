@@ -111,7 +111,7 @@ def api_data(id):
                 db_sess.add(api_data)
             else:
                 api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
-                api_data.data = req.get('data')
+                api_data.data = str(req.get('data'))
             db_sess.commit()
         if req.get('type') == 'delete_data':
             api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
