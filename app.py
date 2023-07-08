@@ -101,7 +101,7 @@ def api_data(id):
         req = request.get_json()
         print(req)
         if not check_key(req.get('key')) and loggined_ip != request.remote_addr:
-            return abort(401)
+            return 'ERROR'
         if req.get('type') == 'write_data':
             if db_sess.query(SaveData).filter(SaveData.id == id).first() is None:
                 api_data = SaveData(
