@@ -113,10 +113,12 @@ def api_data(id):
                 api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
                 api_data.data = str(req.get('data'))
             db_sess.commit()
+            db_sess.close()
         if req.get('type') == 'delete_data':
             api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
             db_sess.delete(api_data)
             db_sess.commit()
+            db_sess.close()
         return "OK"
     api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
     return api_data.data if api_data is not None else abort(404)
