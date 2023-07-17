@@ -17,6 +17,7 @@ app.config['SECRET_KEY'] = 'awfawfawfawf4a34DWDefsae'
 def index():
     db_sess = db_session.create_session()
     posts = db_sess.query(Post)
+    db_sess.close()
     return render_template("index.html", title="Главная",
                            loggined=loggined_ip == request.remote_addr, posts=posts[::-1])
 
@@ -67,6 +68,7 @@ def add_post():
         db_sess = db_session.create_session()
         db_sess.add(post)
         db_sess.commit()
+        db_sess.close()
         return redirect('/')
     return render_template('add_post.html', title="Добавление поста", loggined=loggined_ip == request.remote_addr)
 
@@ -75,6 +77,7 @@ def add_post():
 def render_post(id):
     db_sess = db_session.create_session()
     post = db_sess.query(Post).filter(Post.id == id).first()
+    db_sess.close()
     if not post:
         return abort(404)
     return render_template(f'./loaded_templates/{post.content}', title=post.title, loggined=loggined_ip == request.remote_addr)
@@ -91,6 +94,7 @@ def delete_post(id):
         os.remove(os.path.join(UPLOAD_AVATARS, post.avatar))
         db_sess.delete(post)
         db_sess.commit()
+    db_sess.close()
     return redirect('/')
 
 
@@ -121,6 +125,7 @@ def api_data(id):
             db_sess.close()
         return "OK"
     api_data = db_sess.query(SaveData).filter(SaveData.id == id).first()
+    db_sess.close()
     return api_data.data if api_data is not None else abort(404)
 
 
@@ -147,6 +152,7 @@ def edit_post(id):
             if request.form.get('title'):
                 post.title = request.form.get('title')
             db_sess.commit()
+        db_sess.close()
         return redirect('/')
     return render_template('add_post.html', title=f'Редактировать пост №{id}')
 
