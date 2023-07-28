@@ -5,8 +5,14 @@ from data.posts import Post
 from data.data_api import SaveData
 import uuid
 import os
+from logging.handlers import RotatingFileHandler
+from logging import Formatter
+import logging
 
 app = Flask(__name__)
+
+logging.basicConfig(filename='logs/logs.log', level=logging.DEBUG)
+
 loggined_ip = load_ip()
 UPLOAD_TEMPLATES = './templates/loaded_templates'
 UPLOAD_AVATARS = './static/loaded_avatars'
