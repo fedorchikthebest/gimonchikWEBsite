@@ -3,11 +3,12 @@ from data import db_session
 from functions import *
 from data.posts import Post
 from data.data_api import SaveData
-import uuid
+import json
 import os
-from logging.handlers import RotatingFileHandler
-from logging import Formatter
 import logging
+from flask import make_response
+from datetime import datetime
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
@@ -17,6 +18,39 @@ loggined_ip = load_ip()
 UPLOAD_TEMPLATES = './templates/loaded_templates'
 UPLOAD_AVATARS = './static/loaded_avatars'
 app.config['SECRET_KEY'] = 'awfawfawfawf4a34DWDefsae'
+bad_list = {}
+
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    if request.remote_addr in bad_list.keys():
+        req_date = datetime.now()
+        print((req_date - bad_list[request.remote_addr]).total_seconds())
+        if (req_date - bad_list[request.remote_addr]).total_seconds() < 1:
+            res = make_response("Setting a ban cookie")
+            res.set_cookie('banned', 'yes', max_age=60 * 60 * 24 * 365 * 2)
+            with open('banned_ips.json') as f:
+                ips = json.load(f)
+            ips['ips'].append(request.remote_addr)
+            with open('banned_ips.json', 'w') as f:
+                json.dump(ips, f)
+            del bad_list[request.remote_addr]
+            return res
+    bad_list.update({request.remote_addr: datetime.now()})
+    return f'Ошибка {e}'
+
+
+@app.before_request
+def before_request():
+    if request.remote_addr == loggined_ip:
+        return
+    if not request.cookies.get('test'):
+        res = make_response("Setting a ban cookie")
+        res.set_cookie('test', 'yes', max_age=60 * 60 * 24 * 365 * 2)
+        return res
+    with open('banned_ips.json') as f:
+        if request.cookies.get('banned') or request.remote_addr in json.load(f)['ips']:
+            return render_template('ban_page.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
