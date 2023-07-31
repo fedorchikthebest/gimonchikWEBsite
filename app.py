@@ -21,22 +21,27 @@ app.config['SECRET_KEY'] = 'awfawfawfawf4a34DWDefsae'
 bad_list = {}
 
 
-@app.errorhandler(HTTPException)
+@app.errorhandler(404)
 def handle_exception(e):
     if request.remote_addr in bad_list.keys():
+        print(bad_list.keys())
+        if bad_list[request.remote_addr][1] != 1:
+            bad_list[request.remote_addr][1] += 1
+            return f'Ошибка {e}'
         req_date = datetime.now()
-        print((req_date - bad_list[request.remote_addr]).total_seconds())
-        if (req_date - bad_list[request.remote_addr]).total_seconds() < 1:
-            res = make_response("Setting a ban cookie")
-            res.set_cookie('banned', 'yes', max_age=60 * 60 * 24 * 365 * 2)
+        if (req_date - bad_list[request.remote_addr][0]).total_seconds() < 1:
+            res = make_response(redirect('/'))
+            res.set_cookie('gimonchiks/banned', 'yes', max_age=60 * 60 * 24 * 365 * 2)
             with open('banned_ips.json') as f:
                 ips = json.load(f)
             ips['ips'].append(request.remote_addr)
             with open('banned_ips.json', 'w') as f:
                 json.dump(ips, f)
             del bad_list[request.remote_addr]
+            app.logger.info(f'{request.remote_addr} забанен!')
             return res
-    bad_list.update({request.remote_addr: datetime.now()})
+        bad_list[request.remote_addr] = [datetime.now(), 0]
+    bad_list.update({request.remote_addr: [datetime.now(), 0]})
     return f'Ошибка {e}'
 
 
@@ -45,12 +50,20 @@ def before_request():
     if request.remote_addr == loggined_ip:
         return
     if not request.cookies.get('test'):
-        res = make_response("Setting a ban cookie")
+        res = make_response(redirect(request.path))
         res.set_cookie('test', 'yes', max_age=60 * 60 * 24 * 365 * 2)
         return res
     with open('banned_ips.json') as f:
-        if request.cookies.get('banned') or request.remote_addr in json.load(f)['ips']:
-            return render_template('ban_page.html')
+        bans = json.load(f)
+    if request.cookies.get('gimonchiks/banned') == 'yes' or request.remote_addr in bans['ips']:
+        res = make_response(render_template('ban_page.html'))
+        res.set_cookie('gimonchiks/banned', 'yes', max_age=60 * 60 * 24 * 365 * 2)
+        if request.remote_addr not in bans['ips']:
+            with open('banned_ips.json', 'w') as f:
+                print(bans)
+                bans['ips'].append(request.remote_addr)
+                json.dump(bans, f)
+        return res
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -65,7 +78,6 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload():
     if request.method == 'POST' and loggined_ip == request.remote_addr:
-        print(request.files)
 
         files = request.files.getlist("file")
 
